@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Elementary Listening 1 · 初级听力 1</title>
+<style>
+  :root{
+    --ink:#1d2340; --ink2:#5b6480; --line:#e3e7f1;
+    --brand:#4c5fd5; --brand-soft:#eef1fd;
+    --bg:#f6f7fb; --card:#ffffff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg); color:var(--ink); -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:22px 16px 40px}
+
+  header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+  h1{font-size:24px;letter-spacing:-.4px;line-height:1.2}
+  .cn{font-size:14px;color:var(--ink2);margin-top:5px;letter-spacing:1px}
+  .langs{display:flex;gap:6px;flex-wrap:wrap}
+  .lang{
+    border:1px solid var(--line);background:#fff;color:var(--ink2);
+    border-radius:99px;padding:6px 12px;font-size:12.5px;font-weight:600;
+    cursor:pointer;font-family:inherit;transition:.15s;
+  }
+  .lang:hover{border-color:#c3cbe6}
+  .lang.on{background:var(--brand);border-color:var(--brand);color:#fff}
+
+  .hint{font-size:13px;color:var(--ink2);margin:12px 0 18px;line-height:1.6}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+  @media(min-width:560px){.grid{grid-template-columns:repeat(3,1fr)}}
+  @media(min-width:820px){.grid{grid-template-columns:repeat(4,1fr);gap:13px}}
+  @media(min-width:1040px){.grid{grid-template-columns:repeat(5,1fr)}}
+
+  .drawer{
+    background:var(--card);border:1px solid var(--line);border-top:3px solid var(--brand);
+    border-radius:13px;padding:12px 12px 11px;box-shadow:0 2px 8px rgba(29,35,64,.045);
+    display:flex;flex-direction:column;gap:10px;
+  }
+  .drawer.empty-top{border-top-color:#dfe3ee}
+  .num{display:flex;align-items:baseline;gap:7px}
+  .num b{font-size:27px;font-weight:800;letter-spacing:-1px;color:var(--brand);line-height:1}
+  .drawer.empty-top .num b{color:#a9b0c6}
+  .num span{font-size:11px;color:var(--ink2);letter-spacing:.5px}
+
+  .slots{display:flex;flex-direction:column;gap:6px}
+  .slot{
+    display:block;text-align:center;text-decoration:none;
+    padding:8px 6px;border-radius:8px;font-size:13px;font-weight:600;
+    border:1px solid transparent;transition:.15s;
+  }
+  .slot.on{background:var(--brand-soft);color:var(--brand);border-color:#d7ddf8}
+  .slot.on:hover{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .slot.off{
+    background:#f7f8fc;color:#a9b0c6;border:1px dashed #dde1ee;
+    cursor:default;font-weight:500;font-size:12.5px;
+  }
+  .slot .lbl{display:block}
+  .slot .soon{display:block;font-size:10.5px;margin-top:1px;opacity:.85;font-weight:500}
+
+  footer{margin-top:28px;display:flex;justify-content:center}
+  .teacher-btn{
+    border:1px solid var(--line);background:#fff;color:var(--ink2);
+    border-radius:99px;padding:8px 18px;font-size:12.5px;font-weight:600;
+    cursor:pointer;font-family:inherit;transition:.15s;
+  }
+  .teacher-btn:hover{border-color:var(--brand);color:var(--brand)}
+
+  .overlay{
+    position:fixed;inset:0;background:rgba(20,25,45,.55);z-index:100;
+    display:flex;align-items:center;justify-content:center;padding:18px;
+    backdrop-filter:blur(3px);
+  }
+  .overlay[hidden]{display:none}
+  .dialog{background:#fff;border-radius:16px;padding:22px;width:100%;max-width:340px;box-shadow:0 24px 60px rgba(15,20,40,.3)}
+  .dialog h2{font-size:17px;margin-bottom:14px;text-align:center}
+  .dialog input{
+    width:100%;padding:11px 13px;border:2px solid var(--line);border-radius:10px;
+    font-size:15px;font-family:inherit;outline:none;transition:.15s;
+  }
+  .dialog input:focus{border-color:var(--brand)}
+  .dialog .err{color:#e04b3a;font-size:12.5px;min-height:17px;margin-top:8px;text-align:center}
+  .dialog .row{display:flex;gap:9px;margin-top:12px}
+  .dialog .row button{
+    flex:1;border:none;border-radius:10px;padding:11px;font-size:14px;
+    font-weight:700;cursor:pointer;font-family:inherit;
+  }
+  .dialog .ghost{background:#f1f3f9;color:var(--ink2)}
+  .dialog .primary{background:var(--brand);color:#fff}
+  body[dir="rtl"] .dialog h2,body[dir="rtl"] .dialog .err{text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Elementary Listening 1</h1>
+      <p class="cn">初级听力 1</p>
+    </div>
+    <div class="langs" id="langs"></div>
+  </header>
+  <p class="hint" id="hint"></p>
+  <main class="grid" id="grid"></main>
+  <footer>
+    <button class="teacher-btn" id="teacherBtn">Teacher</button>
+  </footer>
+</div>
+
+<div class="overlay" id="pwOverlay" hidden>
+  <div class="dialog">
+    <h2 id="pwTitle">Teacher access</h2>
+    <input type="password" id="pwInput" autocomplete="off" spellcheck="false">
+    <p class="err" id="pwErr"></p>
+    <div class="row">
+      <button class="ghost" id="pwCancel">Cancel</button>
+      <button class="primary" id="pwOk">OK</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== 配置 ===== */
+const PASSWORD = 'rehcaetmai';   // 想改密码就改这一行（两个文件都要改）
+const LESSONS  = 30;
+const AUTH_KEY = 'el1_auth';
+
+/* ===== 文案 ===== */
+const I18N = {
+  zh: { title:'初级听力 1', words:'生词', sentences:'句子', soon:'即将上线', teacher:'上传',
+        hint:'点开一课，选择生词或句子开始练习。', lesson:'课' },
+  en: { title:'Elementary Listening 1', words:'Words', sentences:'Sentences', soon:'Coming soon', teacher:'Teacher',
+        hint:'Tap a lesson, then choose Words or Sentences.', lesson:'Lesson' },
+  fr: { title:'Écoute élémentaire 1', words:'Mots', sentences:'Phrases', soon:'Bientôt', teacher:'Enseignant',
+        hint:'Choisissez une leçon, puis Mots ou Phrases.', lesson:'Leçon' },
+  es: { title:'Comprensión elemental 1', words:'Palabras', sentences:'Frases', soon:'Próximamente', teacher:'Profesor',
+        hint:'Elige una lección y luego Palabras o Frases.', lesson:'Lección' },
+  ru: { title:'Элементарное аудирование 1', words:'Слова', sentences:'Предложения', soon:'Скоро', teacher:'Учитель',
+        hint:'Выберите урок, затем Слова или Предложения.', lesson:'Урок' },
+  ar: { title:'الاستماع الابتدائي ١', words:'الكلمات', sentences:'الجمل', soon:'قريباً', teacher:'المعلّم',
+        hint:'اختر درساً ثم الكلمات أو الجمل.', lesson:'الدرس' }
+};
+const LANG_ORDER = ['zh','en','fr','es','ru','ar'];
+const LANG_NAME  = { zh:'中文', en:'English', fr:'Français', es:'Español', ru:'Русский', ar:'العربية' };
+
+let lang = 'en';
+try {
+  const saved = localStorage.getItem('el1_lang');
+  if (saved && I18N[saved]) lang = saved;
+  else {
+    const nav = (navigator.language || 'en').slice(0,2).toLowerCase();
+    if (I18N[nav]) lang = nav;
+  }
+} catch (e) {}
+
+function t(k){ return (I18N[lang] && I18N[lang][k]) || I18N.en[k] || k; }
+
+/* ===== 路径规则：cards/lessonNN_words.html / cards/lessonNN_sentences.html ===== */
+function pad2(n){ return String(n).padStart(2,'0'); }
+function slotPath(n, kind){ return 'cards/lesson' + pad2(n) + '_' + kind + '.html'; }
+
+/* 探测文件是否存在（GitHub Pages 上不存在会返回 404） */
+async function exists(url){
+  try {
+    const r = await fetch(url, { method:'HEAD', cache:'no-store' });
+    return r.ok;
+  } catch (e) { return false; }
+}
+
+/* ===== 渲染 ===== */
+function renderLangs(){
+  const box = document.getElementById('langs');
+  box.innerHTML = '';
+  LANG_ORDER.forEach(code => {
+    const b = document.createElement('button');
+    b.className = 'lang' + (code === lang ? ' on' : '');
+    b.textContent = LANG_NAME[code];
+    b.addEventListener('click', () => {
+      lang = code;
+      try { localStorage.setItem('el1_lang', code); } catch (e) {}
+      renderLangs(); renderAll();
+    });
+    box.appendChild(b);
+  });
+}
+
+function applyDir(){
+  const rtl = lang === 'ar';
+  document.body.setAttribute('dir', rtl ? 'rtl' : 'ltr');
+  document.documentElement.lang = lang;
+}
+
+function renderAll(){
+  applyDir();
+  document.getElementById('hint').textContent = t('hint');
+  document.getElementById('teacherBtn').textContent = t('teacher');
+  document.getElementById('pwTitle').textContent = t('teacher');
+  document.title = 'Elementary Listening 1 · 初级听力 1';
+
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+
+  for (let i = 1; i <= LESSONS; i++){
+    const art = document.createElement('article');
+    art.className = 'drawer';
+
+    const num = document.createElement('div');
+    num.className = 'num';
+    num.innerHTML = '<b>' + i + '</b><span>' + t('lesson') + '</span>';
+    art.appendChild(num);
+
+    const slots = document.createElement('div');
+    slots.className = 'slots';
+
+    ['words','sentences'].forEach(kind => {
+      const path = slotPath(i, kind);
+      const el = document.createElement('a');
+      el.className = 'slot off';
+      el.dataset.kind = kind;
+      el.dataset.path = path;
+      el.href = path;
+      el.innerHTML = '<span class="lbl">' + t(kind) + '</span><span class="soon">' + t('soon') + '</span>';
+      el.addEventListener('click', ev => { if (el.dataset.ok !== '1') ev.preventDefault(); });
+      slots.appendChild(el);
+    });
+
+    art.appendChild(slots);
+    grid.appendChild(art);
+  }
+
+  probeAll();
+}
+
+/* 并行探测 60 个文件，逐个点亮 */
+async function probeAll(){
+  const slots = Array.from(document.querySelectorAll('.slot'));
+  const results = await Promise.all(slots.map(s => exists(s.dataset.path)));
+  slots.forEach((s, idx) => {
+    if (results[idx]) {
+      s.dataset.ok = '1';
+      s.classList.remove('off');
+      s.classList.add('on');
+      s.innerHTML = '<span class="lbl">' + t(s.dataset.kind) + '</span>';
+      // 有内容就点亮整张抽屉的顶部色条
+    } else {
+      s.dataset.ok = '0';
+    }
+  });
+  // 抽屉是否为空：两个槽都空则顶部色条变灰
+  document.querySelectorAll('.drawer').forEach(d => {
+    const any = d.querySelector('.slot.on');
+    d.classList.toggle('empty-top', !any);
+  });
+}
+
+/* ===== 教师入口（密码门禁） ===== */
+const overlay = document.getElementById('pwOverlay');
+const pwInput = document.getElementById('pwInput');
+const pwErr   = document.getElementById('pwErr');
+
+function openPw(){
+  pwErr.textContent = '';
+  pwInput.value = '';
+  overlay.hidden = false;
+  setTimeout(() => pwInput.focus(), 30);
+}
+function closePw(){ overlay.hidden = true; }
+
+document.getElementById('teacherBtn').addEventListener('click', openPw);
+document.getElementById('pwCancel').addEventListener('click', closePw);
+document.getElementById('pwOk').addEventListener('click', () => {
+  if (pwInput.value === PASSWORD) {
+    try { sessionStorage.setItem(AUTH_KEY, '1'); } catch (e) {}
+    location.href = 'teacher.html';
+  } else {
+    pwErr.textContent = '×';
+    pwInput.select();
+  }
+});
+pwInput.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('pwOk').click(); });
+overlay.addEventListener('click', e => { if (e.target === overlay) closePw(); });
+
+/* ===== 启动 ===== */
+renderLangs();
+renderAll();
+</script>
+</body>
+</html>
