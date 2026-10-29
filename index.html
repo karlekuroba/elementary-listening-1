@@ -63,36 +63,19 @@
   .slot .lbl{display:block}
   .slot .soon{display:block;font-size:10.5px;margin-top:1px;opacity:.85;font-weight:500}
 
-  footer{margin-top:28px;display:flex;justify-content:center}
-  .teacher-btn{
-    border:1px solid var(--line);background:#fff;color:var(--ink2);
-    border-radius:99px;padding:8px 18px;font-size:12.5px;font-weight:600;
-    cursor:pointer;font-family:inherit;transition:.15s;
+  .bookbar{
+    display:flex;align-items:center;gap:9px;text-decoration:none;
+    background:linear-gradient(90deg,#eef1fd,#f7f4ff);
+    border:1px solid #d7ddf8;border-radius:12px;
+    padding:11px 14px;margin:16px 0 4px;
+    color:var(--brand);font-size:13.5px;font-weight:700;line-height:1.4;
+    transition:.15s;
   }
-  .teacher-btn:hover{border-color:var(--brand);color:var(--brand)}
-
-  .overlay{
-    position:fixed;inset:0;background:rgba(20,25,45,.55);z-index:100;
-    display:flex;align-items:center;justify-content:center;padding:18px;
-    backdrop-filter:blur(3px);
-  }
-  .overlay[hidden]{display:none}
-  .dialog{background:#fff;border-radius:16px;padding:22px;width:100%;max-width:340px;box-shadow:0 24px 60px rgba(15,20,40,.3)}
-  .dialog h2{font-size:17px;margin-bottom:14px;text-align:center}
-  .dialog input{
-    width:100%;padding:11px 13px;border:2px solid var(--line);border-radius:10px;
-    font-size:15px;font-family:inherit;outline:none;transition:.15s;
-  }
-  .dialog input:focus{border-color:var(--brand)}
-  .dialog .err{color:#e04b3a;font-size:12.5px;min-height:17px;margin-top:8px;text-align:center}
-  .dialog .row{display:flex;gap:9px;margin-top:12px}
-  .dialog .row button{
-    flex:1;border:none;border-radius:10px;padding:11px;font-size:14px;
-    font-weight:700;cursor:pointer;font-family:inherit;
-  }
-  .dialog .ghost{background:#f1f3f9;color:var(--ink2)}
-  .dialog .primary{background:var(--brand);color:#fff}
-  body[dir="rtl"] .dialog h2,body[dir="rtl"] .dialog .err{text-align:center}
+  .bookbar:hover{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .bookbar:hover .arrow{opacity:1}
+  .bookbar .ico{font-size:16px}
+  .bookbar .btext{flex:1}
+  .bookbar .arrow{opacity:.55;font-size:14px;font-weight:400}
 </style>
 </head>
 <body>
@@ -104,45 +87,39 @@
     </div>
     <div class="langs" id="langs"></div>
   </header>
+  <a class="bookbar" href="https://hyshu.pages.dev/listening" target="_blank" rel="noopener">
+    <span class="ico">📖</span>
+    <span class="btext" id="bookbarText"></span>
+    <span class="arrow">↗</span>
+  </a>
   <p class="hint" id="hint"></p>
   <main class="grid" id="grid"></main>
-  <footer>
-    <button class="teacher-btn" id="teacherBtn">Teacher</button>
-  </footer>
-</div>
-
-<div class="overlay" id="pwOverlay" hidden>
-  <div class="dialog">
-    <h2 id="pwTitle">Teacher access</h2>
-    <input type="password" id="pwInput" autocomplete="off" spellcheck="false">
-    <p class="err" id="pwErr"></p>
-    <div class="row">
-      <button class="ghost" id="pwCancel">Cancel</button>
-      <button class="primary" id="pwOk">OK</button>
-    </div>
-  </div>
 </div>
 
 <script>
 /* ===== 配置 ===== */
-const PASSWORD = 'rehcaetmai';   // 想改密码就改这一行（两个文件都要改）
-const LESSONS  = 30;
-const AUTH_KEY = 'el1_auth';
+const LESSONS = 30;
 
 /* ===== 文案 ===== */
 const I18N = {
-  zh: { title:'初级听力 1', words:'生词', sentences:'句子', soon:'即将上线', teacher:'上传',
-        hint:'点开一课，选择生词或句子开始练习。', lesson:'课' },
-  en: { title:'Elementary Listening 1', words:'Words', sentences:'Sentences', soon:'Coming soon', teacher:'Teacher',
-        hint:'Tap a lesson, then choose Words or Sentences.', lesson:'Lesson' },
-  fr: { title:'Écoute élémentaire 1', words:'Mots', sentences:'Phrases', soon:'Bientôt', teacher:'Enseignant',
-        hint:'Choisissez une leçon, puis Mots ou Phrases.', lesson:'Leçon' },
-  es: { title:'Comprensión elemental 1', words:'Palabras', sentences:'Frases', soon:'Próximamente', teacher:'Profesor',
-        hint:'Elige una lección y luego Palabras o Frases.', lesson:'Lección' },
-  ru: { title:'Элементарное аудирование 1', words:'Слова', sentences:'Предложения', soon:'Скоро', teacher:'Учитель',
-        hint:'Выберите урок, затем Слова или Предложения.', lesson:'Урок' },
-  ar: { title:'الاستماع الابتدائي ١', words:'الكلمات', sentences:'الجمل', soon:'قريباً', teacher:'المعلّم',
-        hint:'اختر درساً ثم الكلمات أو الجمل.', lesson:'الدرس' }
+  zh: { words:'生词', sentences:'句子', text:'课文', soon:'即将上线', none:'—',
+        hint:'点开一课，选择生词、句子或课文。',
+        banner:'本课课本和音频都在这儿', lesson:'课' },
+  en: { words:'Words', sentences:'Sentences', text:'Text', soon:'Coming soon', none:'—',
+        hint:'Tap a lesson, then choose Words, Sentences or Text.',
+        banner:'Textbook and audio for this course are here', lesson:'Lesson' },
+  fr: { words:'Mots', sentences:'Phrases', text:'Texte', soon:'Bientôt', none:'—',
+        hint:'Choisissez une leçon, puis Mots, Phrases ou Texte.',
+        banner:'Le manuel et l’audio de ce cours sont ici', lesson:'Leçon' },
+  es: { words:'Palabras', sentences:'Frases', text:'Texto', soon:'Próximamente', none:'—',
+        hint:'Elige una lección y luego Palabras, Frases o Texto.',
+        banner:'El libro y el audio del curso están aquí', lesson:'Lección' },
+  ru: { words:'Слова', sentences:'Предложения', text:'Текст', soon:'Скоро', none:'—',
+        hint:'Выберите урок, затем Слова, Предложения или Текст.',
+        banner:'Учебник и аудио к этому курсу — здесь', lesson:'Урок' },
+  ar: { words:'الكلمات', sentences:'الجمل', text:'النص', soon:'قريباً', none:'—',
+        hint:'اختر درساً ثم الكلمات أو الجمل أو النص.',
+        banner:'كتاب هذا الدرس والصوت هنا', lesson:'الدرس' }
 };
 const LANG_ORDER = ['zh','en','fr','es','ru','ar'];
 const LANG_NAME  = { zh:'中文', en:'English', fr:'Français', es:'Español', ru:'Русский', ar:'العربية' };
@@ -197,9 +174,7 @@ function applyDir(){
 function renderAll(){
   applyDir();
   document.getElementById('hint').textContent = t('hint');
-  document.getElementById('teacherBtn').textContent = t('teacher');
-  document.getElementById('pwTitle').textContent = t('teacher');
-  document.title = 'Elementary Listening 1 · 初级听力 1';
+  document.getElementById('bookbarText').textContent = t('banner');
 
   const grid = document.getElementById('grid');
   grid.innerHTML = '';
@@ -216,14 +191,19 @@ function renderAll(){
     const slots = document.createElement('div');
     slots.className = 'slots';
 
-    ['words','sentences'].forEach(kind => {
-      const path = slotPath(i, kind);
+    const kinds = [
+      { kind: 'words',     href: slotPath(i, 'words'),     probe: slotPath(i, 'words') },
+      { kind: 'sentences', href: slotPath(i, 'sentences'), probe: slotPath(i, 'sentences') },
+      { kind: 'text',      href: 'read.html?lesson=' + pad2(i), probe: 'texts/lesson' + pad2(i) + '.json' }
+    ];
+
+    kinds.forEach(k => {
       const el = document.createElement('a');
       el.className = 'slot off';
-      el.dataset.kind = kind;
-      el.dataset.path = path;
-      el.href = path;
-      el.innerHTML = '<span class="lbl">' + t(kind) + '</span><span class="soon">' + t('soon') + '</span>';
+      el.dataset.kind = k.kind;
+      el.dataset.path = k.probe;
+      el.href = k.href;
+      el.innerHTML = '<span class="lbl">' + t(k.kind) + '</span><span class="soon">' + t('soon') + '</span>';
       el.addEventListener('click', ev => { if (el.dataset.ok !== '1') ev.preventDefault(); });
       slots.appendChild(el);
     });
@@ -235,9 +215,9 @@ function renderAll(){
   probeAll();
 }
 
-/* 并行探测 60 个文件，逐个点亮 */
+/* 并行探测所有文件，逐个点亮 */
 async function probeAll(){
-  const slots = Array.from(document.querySelectorAll('.slot'));
+  const slots = Array.from(document.querySelectorAll('.slot')).filter(s => s.dataset.path);
   const results = await Promise.all(slots.map(s => exists(s.dataset.path)));
   slots.forEach((s, idx) => {
     if (results[idx]) {
@@ -245,44 +225,16 @@ async function probeAll(){
       s.classList.remove('off');
       s.classList.add('on');
       s.innerHTML = '<span class="lbl">' + t(s.dataset.kind) + '</span>';
-      // 有内容就点亮整张抽屉的顶部色条
     } else {
       s.dataset.ok = '0';
     }
   });
-  // 抽屉是否为空：两个槽都空则顶部色条变灰
+  // 抽屉是否为空：三个槽都空则顶部色条变灰
   document.querySelectorAll('.drawer').forEach(d => {
     const any = d.querySelector('.slot.on');
     d.classList.toggle('empty-top', !any);
   });
 }
-
-/* ===== 教师入口（密码门禁） ===== */
-const overlay = document.getElementById('pwOverlay');
-const pwInput = document.getElementById('pwInput');
-const pwErr   = document.getElementById('pwErr');
-
-function openPw(){
-  pwErr.textContent = '';
-  pwInput.value = '';
-  overlay.hidden = false;
-  setTimeout(() => pwInput.focus(), 30);
-}
-function closePw(){ overlay.hidden = true; }
-
-document.getElementById('teacherBtn').addEventListener('click', openPw);
-document.getElementById('pwCancel').addEventListener('click', closePw);
-document.getElementById('pwOk').addEventListener('click', () => {
-  if (pwInput.value === PASSWORD) {
-    try { sessionStorage.setItem(AUTH_KEY, '1'); } catch (e) {}
-    location.href = 'teacher.html';
-  } else {
-    pwErr.textContent = '×';
-    pwInput.select();
-  }
-});
-pwInput.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('pwOk').click(); });
-overlay.addEventListener('click', e => { if (e.target === overlay) closePw(); });
 
 /* ===== 启动 ===== */
 renderLangs();

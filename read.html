@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>课文 · Elementary Listening 1</title>
+<style>
+  :root{
+    --ink:#1d2340; --ink2:#5b6480; --line:#e3e7f1;
+    --brand:#4c5fd5; --bg:#fbfbfd;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:720px;margin:0 auto;padding:18px 16px 70px}
+
+  .back{
+    display:inline-block;text-decoration:none;color:var(--ink2);
+    font-size:13px;font-weight:600;padding:6px 0;
+  }
+  .back:hover{color:var(--brand)}
+
+  h1{font-size:20px;margin:10px 0 4px}
+  .sub{font-size:12.5px;color:var(--ink2);line-height:1.6}
+
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 20px}
+  .tab{
+    border:1px solid var(--line);background:#fff;color:var(--ink2);
+    border-radius:99px;padding:7px 16px;font-size:13px;font-weight:600;
+    cursor:pointer;font-family:inherit;transition:.15s;
+  }
+  .tab.on{background:var(--brand);border-color:var(--brand);color:#fff}
+
+  .sentence{margin:0 0 22px;position:relative}
+  .line{display:flex;flex-wrap:wrap;align-items:flex-end;gap:1px}
+
+  .ch{
+    display:flex;flex-direction:column;align-items:center;
+    min-width:1.55em;padding:0 .04em;
+  }
+  .ch i{
+    font-style:normal;font-size:11.5px;line-height:1.35;
+    color:#7b83a3;letter-spacing:0;white-space:nowrap;
+    font-family:"Times New Roman",Georgia,serif;
+  }
+  .ch b{
+    font-size:25px;line-height:1.2;font-weight:500;
+    font-family:"Songti SC","STSong","SimSun",serif;
+  }
+  .line.no-py .ch i{visibility:hidden}
+  .line.no-py .ch b{font-size:27px}
+
+  .q{
+    align-self:flex-end;margin-left:6px;margin-bottom:4px;
+    width:28px;height:28px;border-radius:50%;flex:0 0 auto;
+    border:1px solid #d7ddf8;background:#eef1fd;color:var(--brand);
+    font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;
+    transition:.15s;
+  }
+  .q:hover{background:var(--brand);color:#fff;border-color:var(--brand)}
+
+  .pybar{
+    position:fixed;top:0;left:0;right:0;z-index:50;
+    background:#fff;border-bottom:1px solid var(--line);
+    box-shadow:0 6px 20px rgba(29,35,64,.10);
+    padding:14px 18px;text-align:center;
+    font-family:"Times New Roman",Georgia,serif;
+    font-size:17px;color:var(--brand);letter-spacing:.4px;line-height:1.5;
+    transform:translateY(-105%);transition:transform .18s ease;
+  }
+  .pybar.show{transform:translateY(0)}
+
+  .empty{
+    background:#fff;border:1px dashed var(--line);border-radius:14px;
+    padding:28px 18px;text-align:center;color:var(--ink2);font-size:14px;line-height:1.7;
+  }
+  .note{font-size:12.5px;color:var(--ink2);margin:0 0 14px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="pybar" id="pybar"><span id="pybarText"></span></div>
+<div class="wrap">
+  <a class="back" href="index.html" id="backLink">← 书架</a>
+  <h1 id="lessonTitle"></h1>
+  <p class="sub" id="hintLine"></p>
+  <div class="tabs" id="tabs"></div>
+  <div id="content"></div>
+</div>
+
+<script>
+const LESSON = parseInt(new URLSearchParams(location.search).get('lesson') || '0', 10);
+const ALWAYS_PINYIN = LESSON >= 1 && LESSON <= 10;
+const PAD = String(LESSON).padStart(2, '0');
+
+const I18N = {
+  zh: { back:'← 书架', title:'第 {n} 课 课文', hint:'点句子末尾的「？」看拼音，向下滑动会收起。',
+        hintEarly:'拼音已标在每个汉字上方。', empty:'本课课文尚未上线。', t:'课文' },
+  en: { back:'← Shelf', title:'Lesson {n} · Text', hint:'Tap ？ next to a sentence to see its pinyin; it hides when you scroll down.',
+        hintEarly:'Pinyin is shown above each character.', empty:'This text is not available yet.', t:'Text' },
+  fr: { back:'← Rayon', title:'Leçon {n} · Texte', hint:'Touchez ？ à côté d’une phrase pour le pinyin ; il disparaît au défilement.',
+        hintEarly:'Le pinyin est indiqué au-dessus de chaque caractère.', empty:'Ce texte n’est pas encore disponible.', t:'Texte' },
+  es: { back:'← Estante', title:'Lección {n} · Texto', hint:'Toca ？ junto a una frase para ver el pinyin; se oculta al desplazarte.',
+        hintEarly:'El pinyin aparece sobre cada carácter.', empty:'Este texto aún no está disponible.', t:'Texto' },
+  ru: { back:'← Полка', title:'Урок {n} · Текст', hint:'Нажмите ？ рядом с предложением, чтобы увидеть пиньинь; при прокрутке он скроется.',
+        hintEarly:'Пиньинь показан над каждым иероглифом.', empty:'Этот текст пока недоступен.', t:'Текст' },
+  ar: { back:'→ الرف', title:'الدرس {n} · النص', hint:'اضغط ？ بجانب الجملة لرؤية البينيْن؛ يختفي عند التمرير.',
+        hintEarly:'البينيْن مكتوب فوق كل حرف.', empty:'هذا النص غير متاح بعد.', t:'النص' }
+};
+
+let lang = 'en';
+try {
+  const saved = localStorage.getItem('el1_lang');
+  if (saved && I18N[saved]) lang = saved;
+  else {
+    const nav = (navigator.language || 'en').slice(0,2).toLowerCase();
+    if (I18N[nav]) lang = nav;
+  }
+} catch (e) {}
+function t(k){ return (I18N[lang] && I18N[lang][k]) || I18N.en[k] || k; }
+
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+const bar = document.getElementById('pybar');
+const barText = document.getElementById('pybarText');
+let barAnchor = 0;
+
+function showBar(text){
+  if (!text) return;
+  barText.textContent = text;
+  barAnchor = window.scrollY;
+  bar.classList.add('show');
+}
+function hideBar(){ bar.classList.remove('show'); }
+
+window.addEventListener('scroll', () => {
+  if (bar.classList.contains('show') && Math.abs(window.scrollY - barAnchor) > 12) hideBar();
+}, { passive: true });
+
+/* 一句 → 汉字 + 拼音（拼音可点开上方浮条） */
+function renderSentence(s){
+  const box = document.createElement('div');
+  box.className = 'sentence';
+
+  const line = document.createElement('div');
+  line.className = 'line' + (ALWAYS_PINYIN ? '' : ' no-py');
+
+  const chars = Array.from(String(s.zh || ''));
+  const py = Array.isArray(s.py) ? s.py : [];
+
+  chars.forEach((ch, i) => {
+    const cell = document.createElement('span');
+    cell.className = 'ch';
+    cell.innerHTML = '<i>' + esc(py[i] || '') + '</i><b>' + esc(ch) + '</b>';
+    line.appendChild(cell);
+  });
+
+  if (!ALWAYS_PINYIN) {
+    const q = document.createElement('button');
+    q.className = 'q';
+    q.type = 'button';
+    q.textContent = '？';
+    q.setAttribute('aria-label', 'pinyin');
+    q.addEventListener('click', ev => {
+      ev.stopPropagation();
+      showBar(py.filter(Boolean).join(' '));
+    });
+    line.appendChild(q);
+  }
+
+  box.appendChild(line);
+  return box;
+}
+
+function renderText(index){
+  document.querySelectorAll('.tab').forEach((el, i) => {
+    el.classList.toggle('on', i === index);
+  });
+  const content = document.getElementById('content');
+  content.innerHTML = '';
+  const texts = window.__DATA.texts || [];
+  const t0 = texts[index];
+  if (!t0) return;
+  (t0.sentences || []).forEach(s => content.appendChild(renderSentence(s)));
+  hideBar();
+  window.scrollTo(0, 0);
+}
+
+function boot(data){
+  window.__DATA = data;
+  document.getElementById('backLink').textContent = t('back');
+  document.getElementById('lessonTitle').textContent = t('title').replace('{n}', LESSON);
+  document.getElementById('hintLine').textContent = ALWAYS_PINYIN ? t('hintEarly') : t('hint');
+
+  const tabs = document.getElementById('tabs');
+  tabs.innerHTML = '';
+  const texts = data.texts || [];
+  if (texts.length > 1) {
+    texts.forEach((tx, i) => {
+      const b = document.createElement('button');
+      b.className = 'tab';
+      b.type = 'button';
+      b.textContent = tx.title || (t('t') + ' ' + (i + 1));
+      b.addEventListener('click', () => renderText(i));
+      tabs.appendChild(b);
+    });
+  }
+  if (!texts.length) {
+    document.getElementById('content').innerHTML =
+      '<div class="empty">' + esc(t('empty')) + '</div>';
+    return;
+  }
+  renderText(0);
+}
+
+fetch('texts/lesson' + PAD + '.json', { cache: 'no-store' })
+  .then(r => { if (!r.ok) throw new Error(String(r.status)); return r.json(); })
+  .then(d => boot(d))
+  .catch(() => {
+    document.getElementById('backLink').textContent = t('back');
+    document.getElementById('lessonTitle').textContent = t('title').replace('{n}', LESSON);
+    document.getElementById('hintLine').textContent = '';
+    document.getElementById('content').innerHTML =
+      '<div class="empty">' + esc(t('empty')) + '</div>';
+  });
+</script>
+</body>
+</html>
