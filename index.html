@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="en"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Elementary Listening 1 · 初级听力 1</title>
@@ -99,6 +98,10 @@
 <script>
 /* ===== 配置 ===== */
 const LESSONS = 30;
+// 某一课若缺某类，就在这里加一行：LESSON_NO: ['sentences']
+const EXCLUDE = {
+  1: ['sentences']   // 第 1 课没有句子
+};
 
 /* ===== 文案 ===== */
 const I18N = {
@@ -195,7 +198,7 @@ function renderAll(){
       { kind: 'words',     href: slotPath(i, 'words'),     probe: slotPath(i, 'words') },
       { kind: 'sentences', href: slotPath(i, 'sentences'), probe: slotPath(i, 'sentences') },
       { kind: 'text',      href: 'read.html?lesson=' + pad2(i), probe: 'texts/lesson' + pad2(i) + '.json' }
-    ];
+    ].filter(k => !(EXCLUDE[i] && EXCLUDE[i].includes(k.kind)));
 
     kinds.forEach(k => {
       const el = document.createElement('a');
@@ -240,5 +243,6 @@ async function probeAll(){
 renderLangs();
 renderAll();
 </script>
-</body>
-</html>
+
+
+</body></html>
